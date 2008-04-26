@@ -1,17 +1,16 @@
 = UMNAuthFilter for Rails
 
 Author::        Trevor Wennblom <trevor@umn.edu>
-Copyright::     Copyright (c) 2007 Regents of the University of Minnesota
+Copyright::     Copyright (c) 2007-2008 Regents of the University of Minnesota
+Copyright::     Copyright (c) 2007-2008 Trevor Wennblom
 License::       Public Domain
-Homepage::      http://swdev.cbri.umn.edu/code/umn_authentication_filter
-Repository::    https://svn.cbri.umn.edu/umn_authentication_filter/trunk
-Tarball::       http://swdev.cbri.umn.edu/code/umn_authentication_filter/umn_authentication_filter.tgz
-Bug Reporting:: http://trac.cbri.umn.edu/umn_authentication_filter
-Updated::       2007-06-07
+Homepage::      http://github.com/trevor/umn_authentication_filter
+Updated::       2007-04-26
 
 = Installation
 
-  script/plugin install https://svn.cbri.umn.edu/umn_authentication_filter/trunk umn_authentication_filter
+  TODO
+
 
 = Description
 
