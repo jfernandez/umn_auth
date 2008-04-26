@@ -1,0 +1,129 @@
+= UMNAuthFilter for Rails
+
+Author::        Trevor Wennblom <trevor@umn.edu>
+Copyright::     Copyright (c) 2007 Regents of the University of Minnesota
+License::       Public Domain
+Homepage::      http://swdev.cbri.umn.edu/code/umn_authentication_filter
+Repository::    https://svn.cbri.umn.edu/umn_authentication_filter/trunk
+Tarball::       http://swdev.cbri.umn.edu/code/umn_authentication_filter/umn_authentication_filter.tgz
+Bug Reporting:: http://trac.cbri.umn.edu/umn_authentication_filter
+Updated::       2007-06-07
+
+= Installation
+
+  script/plugin install https://svn.cbri.umn.edu/umn_authentication_filter/trunk umn_authentication_filter
+
+= Description
+
+UMNAuthFilter is an authentication plugin for Rails. This enables cookie-based authentication of users to the University of Minnesota's X500 server. UMNAuthFilter can be used as a filter for any controller.
+
+Once authenticated, session[:umnauth] stores the user's UMNAuthCookie. UMNAuthCookie has the following methods:
+
+* validation_level
+* timestamp
+* ip_address
+* internet_id
+* authentication_method
+
+authentication_method is the English equivalent of the numeric value stored in validation_level.
+
+= Usage
+
+Here's a simple example:
+
+  class ExampleController < ApplicationController
+    before_filter UMNAuthFilter
+
+    def index
+    end
+  end
+
+If you'd like to examine the user's credentials for further authorization they are stored in session[:umnauth].
+
+  class ExampleAuthorizationController < ApplicationController
+    before_filter UMNAuthFilter
+
+    def index
+      if session[:umnauth].validation_level > 10
+        # Typical user
+        flash[:notice] = "Welcome, #{session[:umnauth].internet_id}"
+      else
+        false[:notice] = "We don't take kindly to guests."
+      end
+    end
+  end
+
+For more information on filters see http://api.rubyonrails.org/classes/ActionController/Filters/ClassMethods.html
+
+= Settings
+
+UMNAuthFilter has a few settings that you may tweak easily.
+
+For example, if you wanted to change the name that is used in logs put this in your environment.rb:
+
+  UMNAuthFilter.name = "Your Setting"
+
+If you wanted to disable logging, add this to environment.rb:
+
+  UMNAuthFilter.logging_enabled = false
+
+= User-definable settings
+
+name
+  "UMN Auth"
+
+cookiename
+  "umnAuthV2"
+
+authentication_redirect
+  "https://www.umn.edu/login?desturl="
+
+x500_server
+  "x500.umn.edu"
+
+x500_https_port
+  87
+
+logging_enabled
+  true
+
+debug_enabled
+  false
+
+hours_until_cookie_expires
+  3
+
+= Debugging with Firefox
+
+== Get and install the Web Developer extension
+
+This will allow you to inspect and modify cookies.
+
+* http://chrispederick.com/work/webdeveloper/
+
+== Disable the banned port in Firefox
+
+* Goto about:config
+* Right click anywhere, then "New" -> "String".
+* Set name to "network.security.ports.banned.override"
+* Set value to 87
+
+You can now access the X500 verification page directly to test the server's response. After the ampersand, put in the value of the cookie that you're trying to test (the lengthy alpha-numeric string).
+
+  https://x500.umn.edu:87/WEBCOOKIE?value&
+
+To get a valid cookie just authenticate somewhere as usual. Then in the same tab go to Tools -> Web Developer -> Cookies -> View Cookie Information. The cookie that you're interested in is 'umnAuthV2'.
+
+== Over http instead of https
+
+If you don't have the luxury of https on your development server you can still let Rails grab the cookie you're testing with. After receiving a valid cookie go to View Cookie Information. Edit the 'umnAuthV2' cookie. Uncheck 'Secure cookie'. Check 'Session cookie'. Navigate to the http:// address you're testing against and your Rails instance should be able to grab it.
+
+<b><em>Caution! Pointy things!</em></b> Don't visit any other pages with this browser other than the pages you're testing. Anyone can grab your valid cookie and that's not good. After you're done go to Tools -> Clear Private Data and clear your cookies.
+
+= References
+
+* http://www1.umn.edu/is/cookieauth/aboutcah.html
+
+= Acknowledgements
+
+Special thanks to Justin Coyne for his always gracious assistance.
