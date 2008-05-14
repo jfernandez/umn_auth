@@ -1,15 +1,17 @@
-class UMNAuthFilter
-  cattr_accessor :name
-  cattr_accessor :X500_server
-  cattr_accessor :X500_https_port
-  cattr_accessor :cookiename
-  cattr_accessor :logging_enabled
-  cattr_accessor :debug_enabled
-  cattr_accessor :authorization_redirect
-  
-  require 'net/https'
+require 'net/https'
 
-  def self.filter(controller)
+module UMNAuthFilter
+  mattr_accessor :name
+  mattr_accessor :X500_server
+  mattr_accessor :X500_https_port
+  mattr_accessor :cookiename
+  mattr_accessor :logging_enabled
+  mattr_accessor :debug_enabled
+  mattr_accessor :authorization_redirect
+
+  def self.included(controller)
+    controller.extend ClassMethods
+    
     @@name ||= "UMN Auth"
     @@x500_server ||= "x500.umn.edu"
     @@x500_https_port ||= 87
@@ -18,6 +20,19 @@ class UMNAuthFilter
     @@debug_enabled ||= true
     @@authentication_redirect ||= "https://www.umn.edu/login?desturl="
     @@hours_until_cookie_expires ||= 3
+    @@validation_module = 'WEBCOOKIE' # Can get switched to WEBCOOKIEG by allow_guest_logins!
+    @@validation_level = 30 # Can get changed via allow_guest_logins! to 20, the x500 server must return a number greater than or equal this to be authenticated
+    
+    @@development_mode = false
+    @@development_mode_internet_id = 'development'
+    
+    module ClassMethods
+      
+      def umn_auth_filter
+        # TODO
+      end
+      
+    end
     
     umnauth_cookie = controller.send(:cookies)[@@cookiename]
     umnauth_session = controller.send(:session)[:umnauth]
@@ -84,9 +99,7 @@ class UMNAuthFilter
     controller.send( "session" )[:umnauth] = umnauth_session
   end
   
-  #######
-  private
-  #######
+private
   
   def self.umnauthlog( controller, str, level=:info )
     controller.send( "logger" ).method(level).call("[#{@@name}] #{str}") if @@logging_enabled
@@ -112,4 +125,3 @@ class UMNAuthFilter
     true
   end
 end
-
