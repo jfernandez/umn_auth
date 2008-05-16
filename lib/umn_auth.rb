@@ -98,7 +98,7 @@ private
     http.use_ssl = true
     validation_uri = "/#{@@validation_module}?x&#{CGI.escape(str)}"
     http.start { |http| retval = http.request( Net::HTTP::Get.new( validation_uri ) ).body.strip }
-    umnauthlog "Response from server: #{retval}" if @@logging_enabled
+    print "Response from server: #{retval}" if @@logging_enabled
     retval
   end
   
