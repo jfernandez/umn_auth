@@ -51,7 +51,7 @@ protected
       return false
     end
     
-    if cookie_expired?
+    if session_expired?
       destroy_umnauth_session
       redirect_to login_and_redirect_url
       return false
@@ -72,12 +72,8 @@ private
   
   def build_umnauth_session_from_cookie
     x500_response = perform_https_request_to_x500_validation_server
-    if x500_response_to_hash(x500_response)
-      # TODO: set session[:umnauth]
-      return true
-    else
-      return false
-    end
+    return false unless is_x500_response_okay?(x500_response)
+    session[:umnauth] = UMNAuthCookie.new(x500_response)
   end
   
   def perform_https_request_to_x500_validation_server(debug_encrypted_cookie_value_string=nil)
@@ -92,6 +88,7 @@ private
     retval
   end
   
+  # [DEPRECATED] The UmnAuthCookie class should perform the validation
   def x500_response_to_hash(x500_response)
     return false unless is_x500_response_okay?(x500_response)
     fields = x500_response[3..-1].split('|')
@@ -112,9 +109,9 @@ private
     session[:umnauth] = nil
   end
   
-  def cookie_expired?
-    #timestamp = cookies[UmnAuthFilter.cookiename]
-    #((Time.now.to_i - previous_timestamp.to_i) / 3600.0) > UmnAuth.hours_until_cookie_expires.to_i
+  def session_expired?
+    timestamp = session[:umnauth].timestamp.to_i
+    ((Time.now.to_i - time.to_i) / 3600.0) > @@hours_until_cookie_expires.to_i
   end
   
   def umnauth_log(str, level=:info)

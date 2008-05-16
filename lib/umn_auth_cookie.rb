@@ -1,5 +1,6 @@
 class UMNAuthCookie
   attr_reader :validation_level, :timestamp, :ip_address, :internet_id
+  
   def initialize( str )
     unless str[0..2] == "OK:"
       raise IndexError, "UMNAuthCookie passed invalid string.  Must start with 'OK:'.  Currently: '#{str.inspect}'"
