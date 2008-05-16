@@ -14,103 +14,110 @@ module UMNAuthFilter
   mattr_accessor :development_mode_internet_id
 
   def self.included(controller)
-    controller.extend ClassMethods
-    
     @@name ||= "UMN Auth"
     @@x500_server ||= "x500.umn.edu"
     @@x500_https_port ||= 87
     @@cookiename ||= "umnAuthV2"
     @@logging_enabled ||= true
     @@debug_enabled ||= true
-    @@authentication_redirect ||= "https://www.umn.edu/login?desturl="
+    @@authentication_login_redirect ||= "https://www.umn.edu/login?desturl="
+    @@authentication_logut_redirect ||= "https://www.umn.edu/logout?desturl="
     @@hours_until_cookie_expires ||= 3
     @@validation_module = 'WEBCOOKIE' # Can get switched to WEBCOOKIEG by allow_guest_logins!
     @@validation_level = 30 # Can get changed via allow_guest_logins! to 20, the x500 server must return a number greater than or equal this to be authenticated
-    
     @@development_mode = false
     @@development_mode_internet_id = 'development'
+    
+    controller.helper_method(:login_and_redirect_url, :logout_and_redirect_url)
   end
   
-  module ClassMethods
-    
-    def umn_auth_filter
-      return true if UMNAuthFilter.development_mode
-      
-      unless request.ssl?
-        redirect_to_ssl
-        return false
-      end
-      
-      if cookie_expired?
-        destroy_umnauth_session
-        redirect_to login_and_redirect_url]
-        return false
-      else
-        return true if build_umnauth_session_from_cookie
-        destroy_umnauth_session
-        
-      end
-    end
-    
-  private
+  def login_and_redirect_url(redirect_url=nil)
+    redirect_url ||= request.url
+    @@authentication_login_redirect + ERB::Util.url_encode(redirect_url)
+  end
   
-    def redirect_to_ssl
-      redirect_to "https://" + request.host + request.uri
+  def logout_and_redirect_url(redirect_url=nil)
+    redirect_url ||= request.url
+    @@authentication_logout_redirect + ERB::Util.url_encode(redirect_url)
+  end
+    
+protected
+    
+  def umn_auth_required
+    return true if @@development_mode
+    
+    unless request.ssl?
+      redirect_to_ssl
+      return false
     end
     
-    def build_umnauth_session_from_cookie
-      x500_response = perform_https_request_to_x500_validation_server
-      if x500_response_to_hash(x500_response)
-        # TODO: set session[:umnauth]
-        return true
-      else
-        return false
-      end
+    if cookie_expired?
+      destroy_umnauth_session
+      redirect_to login_and_redirect_url
+      return false
     end
     
-    def perform_https_request_to_x500_validation_server(debug_encrypted_cookie_value_string=nil)
-      str = debug_encrypted_cookie_value_string ? debug_encrypted_cookie_value_string : cookies[UmnAuthFilter.cookiename]
-      retval = ''
-      http = Net::HTTP.new(UMNAuthFilter.x500_server, UMNAuthFilter.x500_https_port)
-      http.verify_mode = OpenSSL::SSL::VERIFY_NONE
-      http.use_ssl = true
-      the_validation_url = "/#{UMNAuthFilter.validation_module}?x&#{CGI.escape(str)}"
-      http.start { |http| retval = http.request( Net::HTTP::Get.new( the_validation_url ) ).body.strip }
-      umnauthlog "Response from server: #{retval}" if UMNAuthFilter.logging_enabled
-      retval
-    end
+    return true if build_umnauth_session_from_cookie
     
-    def x500_response_to_hash(x500_response)
-      if is_x500_response_okay?(x500_response)
-        fields = x500_response[3..-1].split('|')
-        {
-         :validation_level => fields[0].to_i,
-         :timestamp => fields[1].to_i,
-         :ip_address => fields[2],
-         :internet_id => fields[3]
-        }
-      else
-        false
-      end
+    destroy_umnauth_session
+    redirect_to login_an_redirect_url
+    return false
+  end
+  
+private
+
+  def redirect_to_ssl
+    redirect_to "https://" + request.host_with_port + request.uri
+  end
+  
+  def build_umnauth_session_from_cookie
+    x500_response = perform_https_request_to_x500_validation_server
+    if x500_response_to_hash(x500_response)
+      # TODO: set session[:umnauth]
+      return true
+    else
+      return false
     end
-    
-    def is_x500_response_okay?(x500_response)
-      x500_response[0..2] == 'OK:'
-      # TODO check against validation level
-    end
-    
-    # sets session[:umnauth] = nil
-    def destroy_umnauth_session(controller)
-      
-    end
-    
-    def cookie_expired?
-      #timestamp = cookies[UmnAuthFilter.cookiename]
-      #((Time.now.to_i - previous_timestamp.to_i) / 3600.0) > UmnAuth.hours_until_cookie_expires.to_i
-    end
-    
-    def umnauth_log(str, level=:info)
-      # TODO
-    end
+  end
+  
+  def perform_https_request_to_x500_validation_server(debug_encrypted_cookie_value_string=nil)
+    str = debug_encrypted_cookie_value_string ? debug_encrypted_cookie_value_string : cookies[UmnAuthFilter.cookiename]
+    retval = ''
+    http = Net::HTTP.new(@@x500_server, @@x500_https_port)
+    http.verify_mode = OpenSSL::SSL::VERIFY_NONE
+    http.use_ssl = true
+    validation_uri = "/#{@@validation_module}?x&#{CGI.escape(str)}"
+    http.start { |http| retval = http.request( Net::HTTP::Get.new( validation_uri ) ).body.strip }
+    umnauthlog "Response from server: #{retval}" if @@logging_enabled
+    retval
+  end
+  
+  def x500_response_to_hash(x500_response)
+    return false unless is_x500_response_okay?(x500_response)
+    fields = x500_response[3..-1].split('|')
+    {
+      :validation_level => fields[0].to_i,
+      :timestamp => fields[1].to_i,
+      :ip_address => fields[2],
+      :internet_id => fields[3]
+    }
+  end
+  
+  def is_x500_response_okay?(x500_response)
+    str = x500_response.split('|').first.split(':')
+    str.first == 'OK' && str.last >= @@validation_level
+  end
+  
+  def destroy_umnauth_session(controller)
+    session[:umnauth] = nil
+  end
+  
+  def cookie_expired?
+    #timestamp = cookies[UmnAuthFilter.cookiename]
+    #((Time.now.to_i - previous_timestamp.to_i) / 3600.0) > UmnAuth.hours_until_cookie_expires.to_i
+  end
+  
+  def umnauth_log(str, level=:info)
+    # TODO
   end
 end
