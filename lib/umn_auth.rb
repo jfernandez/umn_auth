@@ -57,10 +57,14 @@ protected
       return false
     end
     
-    unless cookies[@@token_name]
+    if cookies[@@token_name].nil?
+      p "content of cookies: #{cookies[@@token_name]}"
+      p "xxxxxxxxxxxx- Did not find cookie"
       redirect_to login_and_redirect_url
       return false
-    end
+    end    
+    
+    p "xxxxxxxxxxxx- YES found cookie"
     
     if current_umn_session 
       if current_umn_session.valid_token_and_not_expired?(cookies[@@token_name])
@@ -75,6 +79,7 @@ protected
     if build_umn_session_from_cookie
       return true
     else
+      p "xxxxxxxxxxxx- wasnt able to built and authenticate session"
       redirect_to login_and_redirect_url
       return false
     end
@@ -99,7 +104,7 @@ private
     http.use_ssl = true
     validation_uri = "/#{@@validation_module}?x&#{CGI.escape(str)}"
     http.start { |http| retval = http.request( Net::HTTP::Get.new( validation_uri ) ).body.strip }
-    print "Response from server: #{retval}" if @@logging_enabled
+    p "Response from server: #{retval}" if @@logging_enabled
     retval
   end
   
@@ -107,7 +112,7 @@ private
     session[:umnauth] = nil
   end
   
-  def umnauth_log(str, level=:info)
-    # TODO
+  def umn_auth_log(str, level=:info)
+    logger.info str
   end
 end
