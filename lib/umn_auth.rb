@@ -71,8 +71,12 @@ protected
       end
     end
     
-    build_umn_session_from_cookie
-    return current_umn_session.nil? ? false : true
+    if build_umn_session_from_cookie
+      return true
+    else
+      redirect_to login_and_redirect_url
+      return false
+    end
   end
   
 private
