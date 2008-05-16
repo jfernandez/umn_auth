@@ -52,19 +52,10 @@ protected
   def umn_auth_required
     return true if @@development_mode
     
-    unless request.ssl?
-      redirect_to_ssl
-      return false
-    end
-    
     if cookies[@@token_name].nil?
-      p "content of cookies: #{cookies[@@token_name]}"
-      p "xxxxxxxxxxxx- Did not find cookie"
       redirect_to login_and_redirect_url
       return false
-    end    
-    
-    p "xxxxxxxxxxxx- YES found cookie"
+    end
     
     if current_umn_session 
       if current_umn_session.valid_token_and_not_expired?(cookies[@@token_name])
@@ -79,7 +70,6 @@ protected
     if build_umn_session_from_cookie
       return true
     else
-      p "xxxxxxxxxxxx- wasnt able to built and authenticate session"
       redirect_to login_and_redirect_url
       return false
     end
