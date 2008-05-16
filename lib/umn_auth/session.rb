@@ -25,7 +25,7 @@ module UmnAuth
     end
     
     def valid?(token, ip)
-      valid_token?(token) && valid_ip?(ip) !expired?
+      valid_token?(token) && valid_ip?(ip) && !expired?
     end
 
     def authentication_method
