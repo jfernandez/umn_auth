@@ -44,7 +44,7 @@ module UmnAuth
   end
   
   def current_umn_session
-    session[:umnauth]
+    session[:umn_auth]
   end
 
 protected
@@ -76,20 +76,21 @@ protected
   end
   
 private
-
+  
+  # [Deprecated] umn.edu/login will always return to the https version of the request
   def redirect_to_ssl
     redirect_to "https://" + request.host_with_port + request.request_uri
   end
   
   def build_umn_session_from_cookie
     x500_response = perform_https_request_to_x500_validation_server
-    session[:umnauth] = UmnAuth::Session.new(x500_response, cookies[@@token_name])
-    logger.info "Contents of session[:umnauth]: #{session[:umnauth].inspect}"
+    session[:umn_auth] = UmnAuth::Session.new(x500_response, cookies[@@token_name])
+    umn_auth_log "Contents of session[:umn_auth]: #{session[:umn_auth].inspect}"
     return current_umn_session
   end
   
   def perform_https_request_to_x500_validation_server(debug_encrypted_cookie_value_string=nil)
-    logger.info "Authentication token in #{@@token_name} cookie: #{cookies[@@token_name]}" if @@logging_enabled
+    umn_auth_log "Authentication token in #{@@token_name} cookie: #{cookies[@@token_name]}"
     str = debug_encrypted_cookie_value_string ? debug_encrypted_cookie_value_string : cookies[@@token_name]
     retval = ''
     http = Net::HTTP.new(@@x500_server, @@x500_https_port)
@@ -97,11 +98,15 @@ private
     http.use_ssl = true
     validation_uri = "/#{@@validation_module}?x&#{CGI.escape(str)}"
     http.start { |http| retval = http.request( Net::HTTP::Get.new( validation_uri ) ).body.strip }
-    logger.info "Response from server: #{retval}" if @@logging_enabled
+    umn_auth_log "Response from server: #{retval}"
     retval
   end
   
   def destroy_umn_session
-    session[:umnauth] = nil
+    session[:umn_auth] = nil
+  end
+  
+  def umn_auth_log(str)
+    logger.info str if @@logging_enabled
   end
 end
