@@ -16,12 +16,16 @@ module UmnAuth
       @authentication_token == token         
     end
     
+    def valid_ip?(ip)
+      @ip_address == ip
+    end
+    
     def expired?
       ((Time.now.to_i - @timestamp) / 3600.0) > UmnAuth.hours_until_cookie_expires
     end
     
-    def valid_token_and_not_expired?(token)
-      valid_token?(token) && !expired?
+    def valid?(token, ip)
+      valid_token?(token) && valid_ip?(ip) !expired?
     end
 
     def authentication_method

@@ -58,7 +58,7 @@ protected
     end
     
     if current_umn_session 
-      if current_umn_session.valid_token_and_not_expired?(cookies[@@token_name])
+      if current_umn_session.valid?(cookies[@@token_name], request.remote_ip)
         return true
       else
         destroy_umn_session
