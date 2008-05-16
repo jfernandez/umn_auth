@@ -1,4 +1,5 @@
-module UMNAuthFilter
+module UmnAuth
+  require 'umn_auth/user'
   require 'net/https' 
   require 'socket'
   require 'cgi'
@@ -6,7 +7,7 @@ module UMNAuthFilter
   mattr_accessor :name
   mattr_accessor :X500_server
   mattr_accessor :X500_https_port
-  mattr_accessor :cookiename
+  mattr_accessor :token_name
   mattr_accessor :logging_enabled
   mattr_accessor :debug_enabled
   mattr_accessor :authorization_redirect
@@ -17,7 +18,7 @@ module UMNAuthFilter
     @@name ||= "UMN Auth"
     @@x500_server ||= "x500.umn.edu"
     @@x500_https_port ||= 87
-    @@cookiename ||= "umnAuthV2"
+    @@token_name ||= "umnAuthV2"
     @@logging_enabled ||= true
     @@debug_enabled ||= true
     @@authentication_login_redirect ||= "https://www.umn.edu/login?desturl="
@@ -40,6 +41,10 @@ module UMNAuthFilter
     redirect_url ||= request.url
     @@authentication_logout_redirect + ERB::Util.url_encode(redirect_url)
   end
+  
+  def current_umn_session
+    session[:umnauth]
+  end
     
 protected
     
@@ -51,17 +56,23 @@ protected
       return false
     end
     
-    if session_expired?
-      destroy_umnauth_session
+    unless cookies[@@token_name]
       redirect_to login_and_redirect_url
       return false
     end
     
-    return true if build_umnauth_session_from_cookie
+    if current_umn_session 
+      if current_umn_session.valid_token_and_not_expired?(cookies[@@token_name])
+        return true
+      else
+        destroy_umn_session
+        redirect_to login_and_redirect_url
+        return false
+      end
+    end
     
-    destroy_umnauth_session
-    redirect_to login_an_redirect_url
-    return false
+    build_umn_session_from_cookie
+    return current_umn_session.nil? ? false : true
   end
   
 private
@@ -70,14 +81,13 @@ private
     redirect_to "https://" + request.host_with_port + request.uri
   end
   
-  def build_umnauth_session_from_cookie
+  def build_umn_session_from_cookie
     x500_response = perform_https_request_to_x500_validation_server
-    return false unless is_x500_response_okay?(x500_response)
-    session[:umnauth] = UMNAuthCookie.new(x500_response)
+    session[:umnauth] = UmnAuth::Session.new(x500_response, cookies[@@token_name])
   end
   
   def perform_https_request_to_x500_validation_server(debug_encrypted_cookie_value_string=nil)
-    str = debug_encrypted_cookie_value_string ? debug_encrypted_cookie_value_string : cookies[UmnAuthFilter.cookiename]
+    str = debug_encrypted_cookie_value_string ? debug_encrypted_cookie_value_string : cookies[@@token_name]
     retval = ''
     http = Net::HTTP.new(@@x500_server, @@x500_https_port)
     http.verify_mode = OpenSSL::SSL::VERIFY_NONE
@@ -88,30 +98,8 @@ private
     retval
   end
   
-  # [DEPRECATED] The UmnAuthCookie class should perform the validation
-  def x500_response_to_hash(x500_response)
-    return false unless is_x500_response_okay?(x500_response)
-    fields = x500_response[3..-1].split('|')
-    {
-      :validation_level => fields[0].to_i,
-      :timestamp => fields[1].to_i,
-      :ip_address => fields[2],
-      :internet_id => fields[3]
-    }
-  end
-  
-  def is_x500_response_okay?(x500_response)
-    str = x500_response.split('|').first.split(':')
-    str.first == 'OK' && str.last >= @@validation_level
-  end
-  
-  def destroy_umnauth_session(controller)
+  def destroy_umnauth_session
     session[:umnauth] = nil
-  end
-  
-  def session_expired?
-    timestamp = session[:umnauth].timestamp.to_i
-    ((Time.now.to_i - time.to_i) / 3600.0) > @@hours_until_cookie_expires.to_i
   end
   
   def umnauth_log(str, level=:info)
