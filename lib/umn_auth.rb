@@ -102,7 +102,7 @@ private
     retval
   end
   
-  def destroy_umnauth_session
+  def destroy_umn_session
     session[:umnauth] = nil
   end
   
