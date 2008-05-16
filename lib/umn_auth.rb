@@ -45,9 +45,9 @@ module UmnAuth
   def current_umn_session
     session[:umnauth]
   end
-    
+
 protected
-    
+
   def umn_auth_required
     return true if @@development_mode
     
@@ -82,7 +82,7 @@ protected
 private
 
   def redirect_to_ssl
-    redirect_to "https://" + request.host_with_port + request.uri
+    redirect_to "https://" + request.host_with_port + request.request_uri
   end
   
   def build_umn_session_from_cookie
