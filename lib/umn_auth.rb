@@ -84,9 +84,12 @@ private
   def build_umn_session_from_cookie
     x500_response = perform_https_request_to_x500_validation_server
     session[:umnauth] = UmnAuth::Session.new(x500_response, cookies[@@token_name])
+    logger.info "Contents of session[:umnauth]: #{session[:umnauth].inspect}"
+    return current_umn_session
   end
   
   def perform_https_request_to_x500_validation_server(debug_encrypted_cookie_value_string=nil)
+    logger.info "Authentication token in #{@@token_name} cookie: #{cookies[@@token_name]}" if @@logging_enabled
     str = debug_encrypted_cookie_value_string ? debug_encrypted_cookie_value_string : cookies[@@token_name]
     retval = ''
     http = Net::HTTP.new(@@x500_server, @@x500_https_port)
@@ -94,15 +97,11 @@ private
     http.use_ssl = true
     validation_uri = "/#{@@validation_module}?x&#{CGI.escape(str)}"
     http.start { |http| retval = http.request( Net::HTTP::Get.new( validation_uri ) ).body.strip }
-    p "Response from server: #{retval}" if @@logging_enabled
+    logger.info "Response from server: #{retval}" if @@logging_enabled
     retval
   end
   
   def destroy_umn_session
     session[:umnauth] = nil
-  end
-  
-  def umn_auth_log(str, level=:info)
-    logger.info str
   end
 end
