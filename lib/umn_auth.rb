@@ -1,5 +1,5 @@
 module UmnAuth
-  require 'umn_auth/user'
+  require 'umn_auth/session'
   require 'net/https' 
   require 'socket'
   require 'cgi'
@@ -29,7 +29,7 @@ module UmnAuth
     @@development_mode = false
     @@development_mode_internet_id = 'development'
     
-    controller.helper_method(:login_and_redirect_url, :logout_and_redirect_url)
+    controller.helper_method(:login_and_redirect_url, :logout_and_redirect_url, :current_umn_session)
   end
   
   def login_and_redirect_url(redirect_url=nil)
