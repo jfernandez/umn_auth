@@ -13,6 +13,7 @@ module UmnAuth
   mattr_accessor :authorization_redirect
   mattr_accessor :development_mode
   mattr_accessor :development_mode_internet_id
+  mattr_accessor :hours_until_cookie_expires
 
   def self.included(controller)
     @@name ||= "UMN Auth"
