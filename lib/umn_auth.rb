@@ -58,13 +58,10 @@ protected
     end
     
     if current_umn_session 
-      if current_umn_session.valid?(cookies[@@token_name], request.remote_ip)
-        return true
-      else
-        destroy_umn_session
-        redirect_to login_and_redirect_url
-        return false
-      end
+      return true if current_umn_session.valid?(cookies[@@token_name], request.remote_ip)
+      destroy_umn_session
+      redirect_to login_and_redirect_url
+      return false
     end
     
     if build_umn_session_from_cookie
@@ -76,11 +73,6 @@ protected
   end
   
 private
-  
-  # [Deprecated] umn.edu/login will always return to the https version of the request
-  def redirect_to_ssl
-    redirect_to "https://" + request.host_with_port + request.request_uri
-  end
   
   def build_umn_session_from_cookie
     x500_response = perform_https_request_to_x500_validation_server
