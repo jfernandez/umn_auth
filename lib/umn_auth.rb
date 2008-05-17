@@ -99,6 +99,6 @@ private
   end
   
   def umn_auth_log(str)
-    logger.info str if @@logging_enabled
+    logger.info("[#{@@name}] #{str}") if @@logging_enabled
   end
 end
