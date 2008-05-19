@@ -37,7 +37,7 @@ module UmnAuth
   end
   
   def current_umn_session
-    session[:umn_auth]
+    session[:umn_auth].nil? ? false : session[:umn_auth]
   end
 
   def umn_auth_required(*args)
@@ -49,22 +49,46 @@ module UmnAuth
       return false
     end
     
-    if current_umn_session 
-      return true if current_umn_session.valid?(cookies[self.umn_auth_options[:token_name]], request.remote_ip, self.umn_auth_options[:hours_until_cookie_expires])
-      destroy_umn_session
-      redirect_to login_and_redirect_url
-      return false
-    end
+    build_umn_session_from_cookie unless current_umn_session
     
-    if build_umn_session_from_cookie
-      return true
+    if current_umn_session_x500_valid?
+      return true if authorized_by_validation_level?
+      access_denied
+      return false
     else
+      destroy_umn_session  
       redirect_to login_and_redirect_url
       return false
     end
   end
+
+protected
+  
+  # Redirect as appropriate when the authorized_by_validation_level? check fails
+  #
+  # The default action is to redirect to x500 login screen
+  #
+  # Override this method in your controllers if you want to have special
+  # behavior in case the user doesn't have the required validation level
+  # to access the requested action.
+  def access_denied
+    redirect_to(logout_and_redirect_url)
+  end
   
 private
+
+  def current_umn_session_x500_valid?
+    (
+      current_umn_session &&  
+      current_umn_session.valid_ip?(request.remote_ip) &&
+      current_umn_session.valid_token?(cookies[self.umn_auth_options[:token_name]]) &&
+      !current_umn_session.expired?(self.umn_auth_options[:hours_until_cookie_expires])
+    ) 
+  end
+  
+  def authorized_by_validation_level?
+    current_umn_session.validation_level >= self.umn_auth_options[:validation_level]
+  end
   
   def build_umn_session_from_cookie
     x500_response = perform_https_request_to_x500_validation_server

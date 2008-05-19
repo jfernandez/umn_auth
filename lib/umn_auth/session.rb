@@ -23,10 +23,6 @@ module UmnAuth
     def expired?(hours_to_expire)
       ((Time.now.to_i - @timestamp) / 3600.0) > hours_to_expire
     end
-    
-    def valid?(token, ip, hours_to_expire)
-      valid_token?(token) && valid_ip?(ip) && !expired?(hours_to_expire)
-    end
 
     def authentication_method
       case @validation_level.to_i
