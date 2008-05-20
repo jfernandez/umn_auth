@@ -6,6 +6,7 @@ module UmnAuth
   
   mattr_accessor :development_mode
   mattr_accessor :development_mode_internet_id
+  mattr_accessor :active_resource_mode
   
   def self.included(controller)
     options = {
@@ -23,6 +24,7 @@ module UmnAuth
     }
     UmnAuth.development_mode ||= false
     UmnAuth.development_mode_internet_id ||= 'development'
+    UmnAuth.active_resource_mode ||= false
     controller.write_inheritable_hash(:umn_auth_options, options)
     controller.class_inheritable_accessor(:umn_auth_options)
     controller.helper_method(:login_and_redirect_url, :logout_and_redirect_url, :current_umn_session)
@@ -39,13 +41,15 @@ module UmnAuth
   end
   
   def current_umn_session
+    return UmnAuth::Session.new(development_mode_x500_response) if UmnAuth.development_mode
     session[:umn_auth].nil? ? false : session[:umn_auth]
   end
 
   def umn_auth_required(*args)
     self.umn_auth_options.merge!(args.extract_options!)
+    return true if UmnAuth.development_mode
     
-    unless UmnAuth.development_mode && cookies[self.umn_auth_options[:token_name]].nil?
+    if cookies[self.umn_auth_options[:token_name]].nil?
       redirect_to(login_and_redirect_url)
       return false
     end
@@ -62,7 +66,7 @@ module UmnAuth
       return false
     end
   end
-
+  
 protected
   
   # Redirect as appropriate when the authorized_by_validation_level? check fails
@@ -96,10 +100,9 @@ private
   end
   
   def build_umn_session_from_cookie
-    x500_response = UmnAuth.development_mode ? development_mode_x500_response : perform_https_request_to_x500_validation_server
+    x500_response = perform_https_request_to_x500_validation_server
     session[:umn_auth] = UmnAuth::Session.new(x500_response, cookies[self.umn_auth_options[:token_name]])
     umn_auth_log "Contents of session[:umn_auth]: #{session[:umn_auth].inspect}"
-    return current_umn_session
   end
   
   def perform_https_request_to_x500_validation_server(debug_encrypted_cookie_value_string=nil)
@@ -117,6 +120,11 @@ private
   
   def destroy_umn_session
     session[:umn_auth] = nil
+  end
+  
+  def get_auth_token_cookie
+    options = { :name => self.umn_auth_options[:token_name], :value => cookies[self.umn_auth_options[:token_name]] }
+    cookie = CGI::Cookie.new(options)
   end
   
   def umn_auth_log(str)
