@@ -4,8 +4,8 @@ module UmnAuth
   require 'socket'
   require 'cgi'
   
-  mattr_reader :development_mode
-  mattr_reader :development_mode_internet_id
+  mattr_accessor :development_mode
+  mattr_accessor :development_mode_internet_id
   
   def self.included(controller)
     options = {
