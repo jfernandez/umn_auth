@@ -41,7 +41,7 @@ module UmnAuth
   end
   
   def current_umn_session
-    return UmnAuth::Session.new(development_mode_x500_response) if UmnAuth.development_mode
+    return UmnAuth::Session.new(development_mode_x500_response, "") if UmnAuth.development_mode
     session[:umn_auth].nil? ? false : session[:umn_auth]
   end
 
