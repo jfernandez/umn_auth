@@ -4,6 +4,9 @@ module UmnAuth
   require 'socket'
   require 'cgi'
   
+  mattr_reader :development_mode
+  mattr_reader :development_mode_internet_id
+  
   def self.included(controller)
     options = {
       :name => "UMN Auth",
@@ -16,11 +19,10 @@ module UmnAuth
       :authentication_logut_redirect => "https://www.umn.edu/logout?desturl=",
       :hours_until_cookie_expires => 3,
       :validation_module => "WEBCOOKIE",
-      :validation_level => 30,
-      :development_mode => false,
-      :development_mode_internet_id => 'development' 
+      :validation_level => 30
     }
-    
+    UmnAuth.development_mode ||= false
+    UmnAuth.development_mode_internet_id ||= 'development'
     controller.write_inheritable_hash(:umn_auth_options, options)
     controller.class_inheritable_accessor(:umn_auth_options)
     controller.helper_method(:login_and_redirect_url, :logout_and_redirect_url, :current_umn_session)
@@ -42,10 +44,9 @@ module UmnAuth
 
   def umn_auth_required(*args)
     self.umn_auth_options.merge!(args.extract_options!)
-    return true if self.umn_auth_options[:development_mode]
     
-    if cookies[self.umn_auth_options[:token_name]].nil?
-      redirect_to login_and_redirect_url
+    unless UmnAuth.development_mode && cookies[self.umn_auth_options[:token_name]].nil?
+      redirect_to(login_and_redirect_url)
       return false
     end
     
@@ -57,7 +58,7 @@ module UmnAuth
       return false
     else
       destroy_umn_session  
-      redirect_to login_and_redirect_url
+      redirect_to(login_and_redirect_url)
       return false
     end
   end
@@ -76,7 +77,11 @@ protected
   end
   
 private
-
+  
+  def development_mode_x500_response
+    "OK:30|#{Time.now.to_i}|127.0.0.1|#{UmnAuth.development_mode_internet_id}|"
+  end
+  
   def current_umn_session_x500_valid?
     (
       current_umn_session &&  
@@ -91,7 +96,7 @@ private
   end
   
   def build_umn_session_from_cookie
-    x500_response = perform_https_request_to_x500_validation_server
+    x500_response = UmnAuth.development_mode ? development_mode_x500_response : perform_https_request_to_x500_validation_server
     session[:umn_auth] = UmnAuth::Session.new(x500_response, cookies[self.umn_auth_options[:token_name]])
     umn_auth_log "Contents of session[:umn_auth]: #{session[:umn_auth].inspect}"
     return current_umn_session
