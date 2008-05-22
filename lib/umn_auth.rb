@@ -51,7 +51,6 @@ module UmnAuth
     
     if cookies[self.umn_auth_options[:token_name]].nil?
       destroy_umn_session
-      umn_auth_log "UmnAuthV2 cookie wasn't found, current content: #{cookies[self.umn_auth_options[:token_name]]}"
       redirect_to(login_and_redirect_url)
       return false
     end
@@ -60,12 +59,9 @@ module UmnAuth
     
     if current_umn_session_x500_valid?
       return true if authorized_by_validation_level?
-      umn_auth_log "Umn Session validation level was too low"
       access_denied
       return false
     else
-      umn_auth_log "Umn Session was invalid, contents are: #{session[:umn_auth].inspect}"
-      umn_auth_log "Validations checks are - valid ip? #{current_umn_session.valid_ip?(request.remote_ip)}, valid token? #{current_umn_session.valid_token?(cookies[self.umn_auth_options[:token_name]])}, expired? #{current_umn_session.expired?(self.umn_auth_options[:hours_until_cookie_expires])}" if current_umn_session
       destroy_umn_session 
       redirect_to(login_and_redirect_url)
       return false
@@ -133,6 +129,6 @@ private
   end
   
   def umn_auth_log(str)
-    logger.info("[#{self.umn_auth_options[:name]}] #{str}") if self.umn_auth_options[:logging_enabled]
+    logger.info("#{self.umn_auth_options[:name]} [#{Time.now.strftime("%d %B %Y (%I:%M %p)")}] #{str}") if self.umn_auth_options[:logging_enabled]
   end
 end
