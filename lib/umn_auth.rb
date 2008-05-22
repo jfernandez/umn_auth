@@ -37,7 +37,7 @@ module UmnAuth
   
   def logout_and_redirect_url(redirect_url=nil)
     redirect_url ||= request.url
-    self.umn_auth_options[:authentication_login_redirect] + ERB::Util.url_encode(redirect_url)
+    self.umn_auth_options[:authentication_logout_redirect] + ERB::Util.url_encode(redirect_url)
   end
   
   def current_umn_session
