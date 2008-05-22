@@ -17,7 +17,7 @@ module UmnAuth
       :logging_enabled => true,
       :debug_enabled => true,
       :authentication_login_redirect => "https://www.umn.edu/login?desturl=",
-      :authentication_logut_redirect => "https://www.umn.edu/logout?desturl=",
+      :authentication_logout_redirect => "https://www.umn.edu/logout?desturl=",
       :hours_until_cookie_expires => 3,
       :validation_module => "WEBCOOKIE",
       :validation_level => 30
