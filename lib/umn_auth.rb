@@ -50,6 +50,7 @@ module UmnAuth
     return true if UmnAuth.development_mode
     
     if cookies[self.umn_auth_options[:token_name]].nil?
+      umn_auth_log "UmnAuthV2 cookie wasn't found, current content: #{cookies[self.umn_auth_options[:token_name]]}"
       redirect_to(login_and_redirect_url)
       return false
     end
@@ -58,10 +59,12 @@ module UmnAuth
     
     if current_umn_session_x500_valid?
       return true if authorized_by_validation_level?
+      umn_auth_log "Umn Session validation level was too low"
       access_denied
       return false
     else
-      destroy_umn_session  
+      destroy_umn_session 
+      umn_auth_log "Umn Session was invalid, valid_id: #{current_umn_session.valid_ip?(request.remote_ip)}, valid_token: #{current_umn_session.valid_token?(cookies[self.umn_auth_options[:token_name]])}, expired?: #{current_umn_session.expired?(self.umn_auth_options[:hours_until_cookie_expires])}"
       redirect_to(login_and_redirect_url)
       return false
     end
