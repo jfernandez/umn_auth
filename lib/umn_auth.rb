@@ -50,6 +50,7 @@ module UmnAuth
     return true if UmnAuth.development_mode
     
     if cookies[self.umn_auth_options[:token_name]].nil?
+      destroy_umn_session
       umn_auth_log "UmnAuthV2 cookie wasn't found, current content: #{cookies[self.umn_auth_options[:token_name]]}"
       redirect_to(login_and_redirect_url)
       return false
