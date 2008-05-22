@@ -42,7 +42,7 @@ module UmnAuth
   
   def current_umn_session
     return UmnAuth::Session.new(development_mode_x500_response, "") if UmnAuth.development_mode
-    session[:umn_auth].nil? ? false : session[:umn_auth]
+    session[:umn_auth]
   end
 
   def umn_auth_required(*args)
@@ -63,8 +63,9 @@ module UmnAuth
       access_denied
       return false
     else
+      umn_auth_log "Umn Session was invalid, contents are: #{session[:umn_auth].inspect}"
+      umn_auth_log "Validations checks are - valid ip? #{current_umn_session.valid_ip?(request.remote_ip)}, valid token? #{current_umn_session.valid_token?(cookies[self.umn_auth_options[:token_name]])}, expired? #{current_umn_session.expired?(self.umn_auth_options[:hours_until_cookie_expires])}" if current_umn_session
       destroy_umn_session 
-      umn_auth_log "Umn Session was invalid, valid_id: #{current_umn_session.valid_ip?(request.remote_ip)}, valid_token: #{current_umn_session.valid_token?(cookies[self.umn_auth_options[:token_name]])}, expired?: #{current_umn_session.expired?(self.umn_auth_options[:hours_until_cookie_expires])}"
       redirect_to(login_and_redirect_url)
       return false
     end
