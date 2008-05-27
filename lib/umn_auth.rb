@@ -96,7 +96,7 @@ protected
 private
   
   def development_mode_x500_response
-    user = users[UmnAuth.development_mode_current_user.to_s]
+    user = UmnAuth.users[UmnAuth.development_mode_current_user.to_s]
     "OK:#{user['validation_level']}|#{user['timestamp']}|#{user['ip_address']}|#{user['internet_id']}|"
   end
   
