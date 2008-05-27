@@ -4,8 +4,11 @@ module UmnAuth
   require 'socket'
   require 'cgi'
   
+  class ConfigFileNotFoundError < StandardError; end
+  
   mattr_accessor :development_mode
-  mattr_accessor :development_mode_internet_id
+  mattr_accessor :development_mode_current_user
+  mattr_accessor :users
   mattr_accessor :active_resource_mode
   
   def self.included(controller)
@@ -22,9 +25,18 @@ module UmnAuth
       :validation_module => "WEBCOOKIE",
       :validation_level => 30
     }
+    
+    umn_auth_users_path = RAILS_ROOT + "/config/umn_auth_users.yml"
+    begin
+      UmnAuth.users = YAML.load(ERB.new(File.read(umn_auth_users_path)).result)
+    rescue
+      raise ConfigFileNotFoundError.new('File %s not found' % umn_auth_users_path) 
+    end
+    
     UmnAuth.development_mode ||= false
-    UmnAuth.development_mode_internet_id ||= 'development'
+    UmnAuth.development_mode_current_user ||= 'gopher'
     UmnAuth.active_resource_mode ||= false
+    
     controller.write_inheritable_hash(:umn_auth_options, options)
     controller.class_inheritable_accessor(:umn_auth_options)
     controller.helper_method(:login_and_redirect_url, :logout_and_redirect_url, :current_umn_session)
@@ -84,7 +96,8 @@ protected
 private
   
   def development_mode_x500_response
-    "OK:30|#{Time.now.to_i}|127.0.0.1|#{UmnAuth.development_mode_internet_id}|"
+    user = users[UmnAuth.development_mode_current_user.to_s]
+    "OK:#{user['validation_level']}|#{user['timestamp']}|#{user['ip_address']}|#{user['internet_id']}|"
   end
   
   def current_umn_session_x500_valid?
