@@ -1,3 +1,8 @@
+# TODO
+
+* Store umn_session as a hash instead of an object in the session.
+* nginx module?
+
 = UMNAuthFilter for Rails
 
 Author::        Trevor Wennblom <trevor@umn.edu>
