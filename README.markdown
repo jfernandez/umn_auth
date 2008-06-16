@@ -77,9 +77,9 @@ class ExamsController < ApplicationController
 
 end
 </pre>
-
-<pre>
-...
-<h1>Hello <%= current_umn_session.internet_id %>!</h1>   
-...
-</pre>
+   
+   ...
+   <div class="header">
+      <h1>Welcome, <%= current_umn_session.internet_id %></h1>
+   </div>
+   ...
