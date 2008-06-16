@@ -1,133 +1,83 @@
-# TODO
+# UmnAuth #
 
-* Store umn_session as a hash instead of an object in the session.
-* nginx module?
+UmnAuth is an authentication plugin for Rails. This enables cookie-based authentication of users to the University of Minnesota's X500 server.
 
-= UMNAuthFilter for Rails
+## Installation
 
-Author::        Trevor Wennblom <trevor@umn.edu>
-Copyright::     Copyright (c) 2007-2008 Regents of the University of Minnesota
-Copyright::     Copyright (c) 2007-2008 Trevor Wennblom
-License::       Public Domain
-Homepage::      http://github.com/trevor/umn_authentication_filter
-Updated::       2007-04-26
+* Using Rails 2.1.* :
 
-= Installation
+<pre>
+./script/plugin install git://github.com/jfernandez/umn_authentication_filter.git
+</pre>
 
-  TODO
+* Using Rails 2.0.* :
 
+<pre>
+cd vendor/plugins
+git clone git@github.com:jfernandez/umn_authentication_filter.git umn_auth
+cd umn_auth
+ruby install.rb
+</pre>
 
-= Description
+* If you're using Subversion, you can download the tarball and unzip it to your /vendor/plugins directory.  Then run `ruby install.rb` from the plugin root folder.
 
-UMNAuthFilter is an authentication plugin for Rails. This enables cookie-based authentication of users to the University of Minnesota's X500 server. UMNAuthFilter can be used as a filter for any controller.
+* If the install.rb script wasn't able to copy over the `umn_auth_users.yml` file into your RAILS_ROOT/config directory, then manually copy over the template from the plugin directory.  Use this config yaml file to set the mocked users to be used while in development mode.
 
-Once authenticated, session[:umnauth] stores the user's UMNAuthCookie. UMNAuthCookie has the following methods:
+* Include the plugin in your Application controller (`application.rb`) :
+
+<pre>
+class ApplicationController < ActionController::Base
+   include UmnAuth
+end
+   
+</pre>
+
+* If you wish to enable the development mode, add the following lines to your development environment (`development.rb`) :
+
+<pre>
+UmnAuth.development_mode = true
+UmnAuth.development_mode_current_user = 'foo' # optional, set to 'gopher' by default
+</pre>
+
+Optionally, you can set `UmnAuth.development_mode_current_user` to one of the mocked users in your yaml config file.
+
+## Instructions
+
+UmnAuth provides you the `umn_auth_required` method, which can be used as a before_filter in any of your application's controllers.  This method will redirect the user to the University of Minnesota X500 login page if no authentication cookie is found. The `umn_auth_required` filter implements the requirements and guidelines found at the UMN Central Authentication Hub website (http://www1.umn.edu/is/cookieauth/aboutcah.html).  The filter will only allow the execution of the controller code once the user has been successfully authenticated with the X500 server.
+
+<pre>
+class ExamsController < ApplicationController
+
+  before_filter :umn_auth_required
+
+  def show
+   # Private stuff
+  end
+
+end
+</pre>
+
+Once authenticated, UmnAuth stores the user's UmnAuth::Session in session[:umn_auth].  UmnAuth::Session has the following attributes:
 
 * validation_level
 * timestamp
 * ip_address
 * internet_id
-* authentication_method
 
-authentication_method is the English equivalent of the numeric value stored in validation_level.
+The current UmnAuth::Session can be easily accessed in a controller or view using the `current_umn_session` method.
 
-= Usage
+<pre>
+# In a controller
+class ExamsController < ApplicationController
 
-Here's a simple example:
+  before_filter :umn_auth_required
 
-  class ExampleController < ApplicationController
-    before_filter UMNAuthFilter
-
-    def index
-    end
+  def show
+   @user_name = current_umn_session.internet_id
   end
 
-If you'd like to examine the user's credentials for further authorization they are stored in session[:umnauth].
+end
 
-  class ExampleAuthorizationController < ApplicationController
-    before_filter UMNAuthFilter
-
-    def index
-      if session[:umnauth].validation_level > 10
-        # Typical user
-        flash[:notice] = "Welcome, #{session[:umnauth].internet_id}"
-      else
-        false[:notice] = "We don't take kindly to guests."
-      end
-    end
-  end
-
-For more information on filters see http://api.rubyonrails.org/classes/ActionController/Filters/ClassMethods.html
-
-= Settings
-
-UMNAuthFilter has a few settings that you may tweak easily.
-
-For example, if you wanted to change the name that is used in logs put this in your environment.rb:
-
-  UMNAuthFilter.name = "Your Setting"
-
-If you wanted to disable logging, add this to environment.rb:
-
-  UMNAuthFilter.logging_enabled = false
-
-= User-definable settings
-
-name
-  "UMN Auth"
-
-cookiename
-  "umnAuthV2"
-
-authentication_redirect
-  "https://www.umn.edu/login?desturl="
-
-x500_server
-  "x500.umn.edu"
-
-x500_https_port
-  87
-
-logging_enabled
-  true
-
-debug_enabled
-  false
-
-hours_until_cookie_expires
-  3
-
-= Debugging with Firefox
-
-== Get and install the Web Developer extension
-
-This will allow you to inspect and modify cookies.
-
-* http://chrispederick.com/work/webdeveloper/
-
-== Disable the banned port in Firefox
-
-* Goto about:config
-* Right click anywhere, then "New" -> "String".
-* Set name to "network.security.ports.banned.override"
-* Set value to 87
-
-You can now access the X500 verification page directly to test the server's response. After the ampersand, put in the value of the cookie that you're trying to test (the lengthy alpha-numeric string).
-
-  https://x500.umn.edu:87/WEBCOOKIE?value&
-
-To get a valid cookie just authenticate somewhere as usual. Then in the same tab go to Tools -> Web Developer -> Cookies -> View Cookie Information. The cookie that you're interested in is 'umnAuthV2'.
-
-== Over http instead of https
-
-If you don't have the luxury of https on your development server you can still let Rails grab the cookie you're testing with. After receiving a valid cookie go to View Cookie Information. Edit the 'umnAuthV2' cookie. Uncheck 'Secure cookie'. Check 'Session cookie'. Navigate to the http:// address you're testing against and your Rails instance should be able to grab it.
-
-<b><em>Caution! Pointy things!</em></b> Don't visit any other pages with this browser other than the pages you're testing. Anyone can grab your valid cookie and that's not good. After you're done go to Tools -> Clear Private Data and clear your cookies.
-
-= References
-
-* http://www1.umn.edu/is/cookieauth/aboutcah.html
-
-= Acknowledgements
-
-Special thanks to Justin Coyne for his always gracious assistance.
+# In a view
+<h1>Hello <%= current_umn_session.internet_id %>!</h1>
+</pre>
