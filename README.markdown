@@ -50,7 +50,7 @@ class ExamsController < ApplicationController
 
   before_filter :umn_auth_required
 
-  def show
+  def index
    # Private stuff
   end
 
@@ -71,8 +71,8 @@ class ExamsController < ApplicationController
 
   before_filter :umn_auth_required
 
-  def show
-   @user_name = current_umn_session.internet_id
+  def index
+   @exams = Exam.find_by_internet_id(current_umn_session.internet_id)
   end
 
 end
