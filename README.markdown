@@ -64,7 +64,7 @@ Once authenticated, UmnAuth stores the user's UmnAuth::Session in session[:umn_a
 * ip_address
 * internet_id
 
-The current UmnAuth::Session can be easily accessed in a controller or view using the `current_umn_session` method.
+The current UmnAuth::Session can be easily accessed in any controller or view using the `current_umn_session` method.
 
 <pre>
 class ExamsController < ApplicationController
@@ -77,9 +77,3 @@ class ExamsController < ApplicationController
 
 end
 </pre>
-   
-   ...
-   <div class="header">
-      <h1>Welcome, <%= current_umn_session.internet_id %></h1>
-   </div>
-   ...
