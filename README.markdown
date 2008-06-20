@@ -77,3 +77,7 @@ class ExamsController < ApplicationController
 
 end
 </pre>
+
+---
+Written by Jose Fernandez and Zachary Crockett
+Acknowledgements: Trevor Wennblom, Justin Coyne, Joe Goggins, Christopher Warren
