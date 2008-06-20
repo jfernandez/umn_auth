@@ -7,14 +7,14 @@ UmnAuth is an authentication plugin for Rails. This enables cookie-based authent
 * Using Rails 2.1.* :
 
 <pre>
-./script/plugin install git://github.com/jfernandez/umn_authentication_filter.git
+./script/plugin install git://github.com/jfernandez/umn_auth.git
 </pre>
 
 * Using Rails 2.0.* :
 
 <pre>
 cd vendor/plugins
-git clone git@github.com:jfernandez/umn_auth.git umn_auth
+git clone git://github.com/jfernandez/umn_auth.git
 cd umn_auth
 ruby install.rb
 </pre>
