@@ -79,5 +79,5 @@ end
 </pre>
 
 ---
-Written by Jose Fernandez and Zachary Crockett
+Written by Jose Fernandez and Zachary Crockett<br/>
 Acknowledgements: Trevor Wennblom, Justin Coyne, Joe Goggins, Christopher Warren
