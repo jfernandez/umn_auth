@@ -71,7 +71,7 @@ module UmnAuth
     
     if current_umn_session_x500_valid?
       return true if authorized_by_validation_level?
-      access_denied
+      umn_access_denied
       return false
     else
       destroy_umn_session 
@@ -89,8 +89,8 @@ protected
   # Override this method in your controllers if you want to have special
   # behavior in case the user doesn't have the required validation level
   # to access the requested action.
-  def access_denied
-    redirect_to(logout_and_redirect_url)
+  def umn_access_denied
+    redirect_to(login_and_redirect_url)
   end
   
 private
@@ -144,4 +144,5 @@ private
   def umn_auth_log(str)
     logger.info("#{self.umn_auth_options[:name]} [#{Time.now.strftime("%d %B %Y (%I:%M %p)")}] #{str}") if self.umn_auth_options[:logging_enabled]
   end
+  
 end
