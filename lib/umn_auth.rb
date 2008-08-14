@@ -23,7 +23,9 @@ module UmnAuth
       :authentication_logout_redirect => "https://www.umn.edu/logout?desturl=",
       :hours_until_cookie_expires => 3,
       :validation_module => "WEBCOOKIE",
-      :validation_level => 30
+      :validation_level => 30,
+      :no_popup => false,
+      :autocontinue => false, 
     }
     
     umn_auth_users_path = RAILS_ROOT + "/config/umn_auth_users.yml"
@@ -44,7 +46,9 @@ module UmnAuth
   
   def login_and_redirect_url(redirect_url=nil)
     redirect_url ||= request.url
-    self.umn_auth_options[:authentication_login_redirect] + ERB::Util.url_encode(redirect_url)
+    url = self.umn_auth_options[:authentication_login_redirect] + ERB::Util.url_encode(redirect_url)
+    url << "&no_popup=1" if self.umn_auth_options[:no_popup]
+    url << "&autocontinue=1" if self.umn_auth_options[:autocontinue]
   end
   
   def logout_and_redirect_url(redirect_url=nil)
