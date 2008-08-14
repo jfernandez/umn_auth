@@ -49,6 +49,7 @@ module UmnAuth
     url = self.umn_auth_options[:authentication_login_redirect] + ERB::Util.url_encode(redirect_url)
     url << "&no_popup=1" if self.umn_auth_options[:no_popup]
     url << "&autocontinue=1" if self.umn_auth_options[:autocontinue]
+    return url
   end
   
   def logout_and_redirect_url(redirect_url=nil)
