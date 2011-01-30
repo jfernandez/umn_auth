@@ -4,19 +4,8 @@ UmnAuth is an authentication plugin for Rails. This enables cookie-based authent
 
 ## Installation
 
-* Using Rails 2.1.* :
-
 <pre>
 ./script/plugin install git://github.com/jfernandez/umn_auth.git
-</pre>
-
-* Using Rails 2.0.* :
-
-<pre>
-cd vendor/plugins
-git clone git://github.com/jfernandez/umn_auth.git
-cd umn_auth
-ruby install.rb
 </pre>
 
 * If you're using Subversion, you can download the tarball and unzip it to your /vendor/plugins directory.  Then run `ruby install.rb` from the plugin root folder.
