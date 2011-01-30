@@ -4,29 +4,18 @@ UmnAuth is an authentication plugin for Rails. This enables cookie-based authent
 
 ## Installation
 
-<pre>
-./script/plugin install git://github.com/jfernandez/umn_auth.git
-</pre>
+    ./script/plugin install git://github.com/jfernandez/umn_auth.git
 
-* If you're using Subversion, you can download the tarball and unzip it to your /vendor/plugins directory.  Then run `ruby install.rb` from the plugin root folder.
+1. If you're using Subversion, you can download the tarball and unzip it to your /vendor/plugins directory.  Then run `ruby install.rb` from the plugin root folder.
 
-* If the install.rb script wasn't able to copy over the `umn_auth_users.yml` file into your RAILS_ROOT/config directory, then manually copy over the template from the plugin directory.  Use this config yaml file to set the mocked users to be used while in development mode.
+2. If the install.rb script wasn't able to copy over the `umn_auth_users.yml` file into your RAILS_ROOT/config directory, then manually copy over the template from the plugin directory.  Use this config yaml file to set the mocked users to be used while in development mode.
 
-* Include the plugin in your Application controller (`application.rb`) :
+3. Include the plugin in your Application controller (`application.rb`) :
 
-<pre>
-class ApplicationController < ActionController::Base
-   include UmnAuth
-end
-   
-</pre>
+4. If you wish to enable the development mode, add the following lines to your development environment (`development.rb`) :
 
-* If you wish to enable the development mode, add the following lines to your development environment (`development.rb`) :
-
-<pre>
-UmnAuth.development_mode = true
-UmnAuth.development_mode_current_user = 'foo' # optional, set to 'gopher' by default
-</pre>
+`UmnAuth.development_mode = true`
+`UmnAuth.development_mode_current_user = 'foo' # optional, set to 'gopher' by default`
 
 Optionally, you can set `UmnAuth.development_mode_current_user` to one of the mocked users in your yaml config file.
 
@@ -34,19 +23,17 @@ Optionally, you can set `UmnAuth.development_mode_current_user` to one of the mo
 
 UmnAuth provides you the `umn_auth_required` method, which can be used as a before_filter in any of your application's controllers.  This method will redirect the user to the University of Minnesota X500 login page if no authentication cookie is found. The `umn_auth_required` filter implements the requirements and guidelines found at the UMN Central Authentication Hub website (http://www1.umn.edu/is/cookieauth/aboutcah.html).  The filter will only allow the execution of the controller code once the user has been successfully authenticated with the X500 server.
 
-<pre>
-class ExamsController < ApplicationController
+    class ExamsController < ApplicationController
 
-  before_filter :umn_auth_required
+      before_filter :umn_auth_required
 
-  def index
-   # Private stuff
-  end
+      def index
+       # Private stuff
+      end
 
-end
-</pre>
+    end
 
-Once authenticated, UmnAuth stores the user's UmnAuth::Session in session[:umn_auth].  UmnAuth::Session has the following attributes:
+Once authenticated, UmnAuth stores the user's UmnAuth::Session in `session[:umn_auth]`.  UmnAuth::Session has the following attributes:
 
 * validation_level
 * timestamp
@@ -55,17 +42,15 @@ Once authenticated, UmnAuth stores the user's UmnAuth::Session in session[:umn_a
 
 The current UmnAuth::Session can be easily accessed in any controller or view using the `current_umn_session` method.
 
-<pre>
-class ExamsController < ApplicationController
+    class ExamsController < ApplicationController
 
-  before_filter :umn_auth_required
+      before_filter :umn_auth_required
 
-  def index
-   @exams = Exam.find_by_internet_id(current_umn_session.internet_id)
-  end
+      def index
+       @exams = Exam.find_by_internet_id(current_umn_session.internet_id)
+      end
 
-end
-</pre>
+    end
 
 ---
 Written by Jose Fernandez and Zachary Crockett<br/>
