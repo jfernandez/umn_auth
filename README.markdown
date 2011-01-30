@@ -14,10 +14,10 @@ UmnAuth is an authentication plugin for Rails. This enables cookie-based authent
 
 4. If you wish to enable the development mode, add the following lines to your development environment (`development.rb`) :
 
-`UmnAuth.development_mode = true`
-`UmnAuth.development_mode_current_user = 'foo' # optional, set to 'gopher' by default`
+(Optionally, you can set `UmnAuth.development_mode_current_user` to one of the mocked users in your yaml config file.)
 
-Optionally, you can set `UmnAuth.development_mode_current_user` to one of the mocked users in your yaml config file.
+    UmnAuth.development_mode = true
+    UmnAuth.development_mode_current_user = 'foo' # optional, set to 'gopher' by default
 
 ## Instructions
 
