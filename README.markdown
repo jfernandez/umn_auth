@@ -52,6 +52,6 @@ The current UmnAuth::Session can be easily accessed in any controller or view us
 
     end
 
----
+----
 Written by Jose Fernandez and Zachary Crockett<br/>
 Acknowledgements: Trevor Wennblom, Justin Coyne, Joe Goggins, Christopher Warren
